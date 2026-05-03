@@ -132,14 +132,13 @@ textarea{resize:vertical;min-height:80px}
 .tag-rft{color:#e24b4a;border-color:#e24b4a;background:rgba(226,75,74,.12)}
 .tag-other{color:#888;border-color:#555;background:rgba(136,136,136,.1)}
 
-/* Movement list — 回数 / 重量 / 種目 / 削除 の4列グリッド */
-.moves-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-.move-row{display:grid;grid-template-columns:56px 70px 1fr 44px;gap:5px;align-items:center}
+/* Movement list — 回数/重量/距離/削除(上段) + エクササイズ(下段) の2段グリッド */
+.moves-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.move-row{display:grid;grid-template-columns:1fr 1fr 1fr 44px;row-gap:4px;column-gap:5px}
 .move-row input{margin:0;padding:8px 8px;font-size:15px;min-height:40px;text-align:center}
-.move-row input:last-of-type{text-align:left}
-.move-col-labels{display:grid;grid-template-columns:56px 70px 1fr 44px;gap:5px;margin-bottom:2px}
+.move-row .ex-input{grid-column:1/5;text-align:left}
+.move-col-labels{display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:5px;margin-bottom:2px}
 .move-col-label{font-size:10px;letter-spacing:1px;color:var(--muted);text-align:center;font-weight:600;text-transform:uppercase}
-.move-col-label:nth-child(3){text-align:left}
 .add-move-btn{
   display:flex;align-items:center;gap:6px;background:none;
   border:1px dashed var(--border2);color:var(--muted);font-size:15px;
