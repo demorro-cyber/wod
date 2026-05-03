@@ -210,6 +210,7 @@ textarea{resize:vertical;min-height:80px}
     <button class="tab active" onclick="switchTab('wod')">WOD記録</button>
     <button class="tab" onclick="switchTab('pr')">PRボード</button>
     <button class="tab" onclick="switchTab('history')">履歴</button>
+    <button class="tab" onclick="switchTab('data')">データ</button>
   </div>
 
   <div class="content" id="content"></div>
@@ -292,7 +293,7 @@ function renderStats(){
 let currentTab='wod';
 function switchTab(tab){
   currentTab=tab;
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['wod','pr','history'][i]===tab));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['wod','pr','history','data'][i]===tab));
   const c=document.getElementById('content');
   c.innerHTML=renderTab(tab);
   c.scrollTop=0;
@@ -301,6 +302,7 @@ function renderTab(tab){
   if(tab==='wod')return tmplWOD();
   if(tab==='pr')return tmplPR();
   if(tab==='history')return tmplHistory();
+  if(tab==='data')return tmplData();
   return'';
 }
 
@@ -686,7 +688,133 @@ function filterHistory(){
     :`<div class="empty">「${q}」に一致するワークアウトはありません</div>`;
 }
 
-// ─── Utils ────────────────────────────────────────────────────
+// ─── Data Tab ─────────────────────────────────────────────────
+function tmplData(){
+  const wCount=state.workouts.length;
+  const prCount=state.prs.length;
+  const oldest=wCount?state.workouts.slice().sort((a,b)=>toISO(a.date).localeCompare(toISO(b.date)))[0]:null;
+  const newest=wCount?state.workouts.slice().sort((a,b)=>toISO(b.date).localeCompare(toISO(a.date)))[0]:null;
+  return`
+  <div class="section-title">データ管理</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">現在のデータ</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg3);border-radius:var(--rad);padding:14px;text-align:center">
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">${wCount}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">WOD記録</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--rad);padding:14px;text-align:center">
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">${prCount}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">PR登録数</div>
+      </div>
+    </div>
+    ${oldest?`<div style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center">記録期間：${fmtDate(oldest.date)} 〜 ${fmtDate(newest.date)}</div>`:''}
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">📤 エクスポート（バックアップ）</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      全データをJSONファイルとして保存します。<br>新しいスマホでこのファイルを読み込めばデータを復元できます。
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="exportData()">データをダウンロード</button>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">📥 インポート（復元）</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      バックアップしたJSONファイルを読み込みます。<br><span style="color:var(--warn);font-weight:600">⚠️ 現在のデータに追加されます（上書きではありません）。</span>
+    </div>
+    <label style="display:block;background:var(--bg3);border:2px dashed var(--border2);border-radius:var(--rad);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s" id="import-drop">
+      <input type="file" accept=".json" style="display:none" id="import-file" onchange="importData(this)">
+      <div style="font-size:28px;margin-bottom:6px">📂</div>
+      <div style="font-size:14px;font-weight:600;color:var(--muted2)">タップしてファイルを選択</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">.jsonファイルのみ対応</div>
+    </label>
+    <div id="import-result" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card" style="border-color:var(--danger)">
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px;color:var(--danger)">🗑️ データを全削除</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      全てのWOD記録とPRを削除します。<br><span style="font-weight:600">この操作は取り消せません。</span>削除前にバックアップを推奨します。
+    </div>
+    <button class="btn btn-danger" style="width:100%" onclick="deleteAllData()">全データを削除する</button>
+  </div>`;
+}
+
+function exportData(){
+  const data={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    workouts:state.workouts,
+    prs:state.prs
+  };
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`WODTracker_backup_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      const resultEl=document.getElementById('import-result');
+      // バリデーション
+      if(!data.workouts&&!data.prs){
+        resultEl.innerHTML=`<div style="color:var(--danger);font-size:13px;padding:10px;background:rgba(226,75,74,.1);border-radius:var(--rad)">❌ 無効なファイルです。WOD Trackerのバックアップファイルを選択してください。</div>`;
+        return;
+      }
+      const newWorkouts=Array.isArray(data.workouts)?data.workouts:[];
+      const newPRs=Array.isArray(data.prs)?data.prs:[];
+
+      // 重複チェック（id）
+      const existingWodIds=new Set(state.workouts.map(w=>w.id));
+      const existingPRIds=new Set(state.prs.map(p=>p.id));
+      const addedWorkouts=newWorkouts.filter(w=>!existingWodIds.has(w.id));
+      const addedPRs=newPRs.filter(p=>!existingPRIds.has(p.id));
+
+      if(addedWorkouts.length===0&&addedPRs.length===0){
+        resultEl.innerHTML=`<div style="color:var(--warn);font-size:13px;padding:10px;background:rgba(245,166,35,.1);border-radius:var(--rad)">⚠️ 全て既に存在するデータです。追加はありませんでした。</div>`;
+        return;
+      }
+
+      state.workouts=[...state.workouts,...addedWorkouts];
+      state.prs=[...state.prs,...addedPRs];
+      saveWorkouts();
+      savePRs();
+      renderStats();
+      resultEl.innerHTML=`<div style="color:var(--success);font-size:13px;padding:10px;background:rgba(93,202,165,.1);border-radius:var(--rad)">✅ インポート完了！<br>WOD: ${addedWorkouts.length}件 追加、PR: ${addedPRs.length}件 追加</div>`;
+    }catch(err){
+      document.getElementById('import-result').innerHTML=`<div style="color:var(--danger);font-size:13px;padding:10px;background:rgba(226,75,74,.1);border-radius:var(--rad)">❌ ファイルの読み込みに失敗しました。</div>`;
+    }
+  };
+  reader.readAsText(file);
+}
+
+function deleteAllData(){
+  if(!confirm('本当に全データを削除しますか？\nこの操作は取り消せません。'))return;
+  if(!confirm('最終確認：WOD記録とPRを全て削除します。よろしいですか？'))return;
+  state.workouts=[];
+  state.prs=[];
+  saveWorkouts();
+  savePRs();
+  renderStats();
+  switchTab('data');
+}
+
+
 function v(id){return(document.getElementById(id)?.value||'').trim();}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
