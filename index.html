@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>WOD Tracker</title>
 
-<!-- ★ iPhone PWA メタタグ ★ -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="WOD Tracker">
@@ -68,6 +67,7 @@ body{
 /* Cards */
 .section-title{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:19px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad2);padding:16px 15px;margin-bottom:14px}
+.card-editing{border-color:var(--accent) !important;background:rgba(245,197,24,.04) !important;}
 
 /* Form */
 label.lbl{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:600;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block}
@@ -76,7 +76,6 @@ input,select,textarea{
   border:1px solid var(--border);border-radius:var(--rad);
   padding:10px 12px;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
-  /* ★ 16px以上でiOSの自動ズームを防止 */
   font-size:16px;
   outline:none;transition:border-color .2s;display:block;
   -webkit-appearance:none;appearance:none;min-height:44px;
@@ -90,7 +89,6 @@ select{
 textarea{resize:vertical;min-height:80px}
 .field{margin-bottom:12px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* ★ iPhone 8 (375px): 3列は2+1に変更 */
 .grid3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid3 .field:last-child{grid-column:span 2}
 .row{display:flex;gap:10px;align-items:flex-end}
@@ -119,6 +117,12 @@ textarea{resize:vertical;min-height:80px}
   border-radius:4px;transition:color .15s,background .15s;touch-action:manipulation;flex-shrink:0;
 }
 .del-btn:active{color:#fff;background:var(--danger)}
+.edit-btn{
+  background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;
+  min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;
+  border-radius:4px;transition:color .15s,background .15s;touch-action:manipulation;flex-shrink:0;
+}
+.edit-btn:active{color:var(--accent);background:var(--accent3)}
 
 /* Tags */
 .tag{display:inline-block;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:4px;border:1px solid}
@@ -128,12 +132,14 @@ textarea{resize:vertical;min-height:80px}
 .tag-rft{color:#e24b4a;border-color:#e24b4a;background:rgba(226,75,74,.12)}
 .tag-other{color:#888;border-color:#555;background:rgba(136,136,136,.1)}
 
-/* Movement list */
+/* Movement list — 回数 / 重量 / 種目 / 削除 の4列グリッド */
 .moves-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-.move-row{display:flex;gap:8px;align-items:center}
-.move-row .reps{width:85px;flex-shrink:0;text-align:center}
-.move-row .exercise{flex:1}
-.move-row input{margin:0}
+.move-row{display:grid;grid-template-columns:56px 70px 1fr 44px;gap:5px;align-items:center}
+.move-row input{margin:0;padding:8px 8px;font-size:15px;min-height:40px;text-align:center}
+.move-row input:last-of-type{text-align:left}
+.move-col-labels{display:grid;grid-template-columns:56px 70px 1fr 44px;gap:5px;margin-bottom:2px}
+.move-col-label{font-size:10px;letter-spacing:1px;color:var(--muted);text-align:center;font-weight:600;text-transform:uppercase}
+.move-col-label:nth-child(3){text-align:left}
 .add-move-btn{
   display:flex;align-items:center;gap:6px;background:none;
   border:1px dashed var(--border2);color:var(--muted);font-size:15px;
@@ -142,8 +148,10 @@ textarea{resize:vertical;min-height:80px}
 }
 .add-move-btn:active{border-color:var(--accent);color:var(--accent)}
 .move-display{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-.move-line{display:flex;gap:10px;align-items:baseline;font-size:13px;padding:3px 0}
-.move-reps{font-weight:700;color:var(--accent);min-width:50px;text-align:right;font-size:14px;flex-shrink:0}
+.move-line{display:flex;gap:6px;align-items:baseline;font-size:13px;padding:3px 0;flex-wrap:wrap}
+.move-reps{font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0}
+.move-weight{font-weight:600;color:var(--warn);font-size:13px;flex-shrink:0}
+.move-sep{color:var(--border2);font-size:11px;flex-shrink:0}
 .move-ex{color:var(--muted2)}
 
 /* Workout cards */
@@ -155,18 +163,27 @@ textarea{resize:vertical;min-height:80px}
 .wod-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .wod-body{flex:1;min-width:0}
 
+/* Edit banner */
+.edit-banner{
+  background:var(--accent3);border:1px solid var(--accent);border-radius:var(--rad);
+  padding:10px 14px;margin-bottom:14px;
+  font-size:13px;color:var(--accent);font-weight:600;letter-spacing:0.3px;
+  display:flex;align-items:center;gap:8px;
+}
+
 /* PRs */
 .pr-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
 .pr-item:last-child{border-bottom:none}
 .pr-name{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase}
-.pr-val{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:22px;color:var(--accent)}
+.pr-val{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:20px;color:var(--accent)}
 .pr-date{font-size:11px;color:var(--muted);margin-top:2px}
 
 /* History */
 .hist-date-group{margin-bottom:20px}
 .hist-date{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .hist-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:12px 14px;margin-bottom:8px}
-.hist-header{display:flex;justify-content:space-between;align-items:center}
+.hist-header{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+.hist-actions{display:flex;flex-shrink:0}
 .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:15px;line-height:1.8}
 .save-notice{
   position:fixed;bottom:calc(16px + var(--safe-bottom));right:16px;
@@ -191,7 +208,7 @@ textarea{resize:vertical;min-height:80px}
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('wod')">今日のWOD</button>
+    <button class="tab active" onclick="switchTab('wod')">WOD記録</button>
     <button class="tab" onclick="switchTab('pr')">PRボード</button>
     <button class="tab" onclick="switchTab('history')">履歴</button>
   </div>
@@ -202,7 +219,7 @@ textarea{resize:vertical;min-height:80px}
 <div class="save-notice" id="save-notice">保存しました</div>
 
 <script>
-// ─── PWA: Apple Touch Icon (canvas生成) ─────────────────────
+// ─── PWA: Apple Touch Icon ────────────────────────────────────
 (function(){
   try{
     const c=document.createElement('canvas');c.width=180;c.height=180;
@@ -212,9 +229,7 @@ textarea{resize:vertical;min-height:80px}
     x.font='bold 56px -apple-system,Helvetica,sans-serif';x.fillStyle='#f5c518';x.textAlign='center';x.fillText('WOD',90,85);
     x.font='bold 22px -apple-system,Helvetica,sans-serif';x.fillStyle='#f0f0f0';x.fillText('TRACKER',90,118);
     x.fillStyle='#f5c518';
-    // ダンベル左
     x.fillRect(18,142,16,8);x.fillRect(38,138,8,16);x.fillRect(46,144,28,4);
-    // ダンベル右
     x.fillRect(106,144,28,4);x.fillRect(134,138,8,16);x.fillRect(146,142,16,8);
     document.getElementById('apple-touch-icon').href=c.toDataURL('image/png');
   }catch(e){}
@@ -235,14 +250,38 @@ function flash(){
   clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity=0,1500);
 }
 
-// ─── Date & Stats ─────────────────────────────────────────────
+// ─── Date helpers ─────────────────────────────────────────────
 const TODAYKEY=new Date().toISOString().slice(0,10);
 document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
 
+// YYYY-MM-DD に正規化（旧フォーマット "2024/1/15" にも対応）
+function toISO(s){
+  if(!s)return TODAYKEY;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  try{
+    const d=new Date(s);
+    if(isNaN(d))return TODAYKEY;
+    return d.toISOString().slice(0,10);
+  }catch(e){return TODAYKEY;}
+}
+
+function fmtDate(s){
+  if(!s)return'';
+  try{
+    const d=new Date(toISO(s)+'T12:00:00');
+    return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  }catch(e){return s;}
+}
+
+// ─── Stats ────────────────────────────────────────────────────
 function renderStats(){
   const total=state.workouts.length;
-  const week=state.workouts.filter(w=>(new Date()-new Date(w.date+'T12:00:00'))/(864e5)<=7).length;
-  const month=state.workouts.filter(w=>{const d=new Date(w.date+'T12:00:00'),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();}).length;
+  const now=new Date();
+  const week=state.workouts.filter(w=>(now-new Date(toISO(w.date)+'T12:00:00'))/(864e5)<=7).length;
+  const month=state.workouts.filter(w=>{
+    const d=new Date(toISO(w.date)+'T12:00:00');
+    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  }).length;
   document.getElementById('hdr-stats').innerHTML=
     `<div class="stat-chip"><span>${total}</span> 総WOD</div>
      <div class="stat-chip"><span>${week}</span> 今週</div>
@@ -255,28 +294,43 @@ let currentTab='wod';
 function switchTab(tab){
   currentTab=tab;
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['wod','pr','history'][i]===tab));
-  document.getElementById('content').innerHTML=renderTab(tab);
+  const c=document.getElementById('content');
+  c.innerHTML=renderTab(tab);
+  c.scrollTop=0;
 }
 function renderTab(tab){
   if(tab==='wod')return tmplWOD();
   if(tab==='pr')return tmplPR();
   if(tab==='history')return tmplHistory();
-  return '';
+  return'';
 }
 
 // ─── WOD Tab ──────────────────────────────────────────────────
 const WOD_TYPES=['AMRAP','For Time','EMOM','RFT','Other'];
 const tagCls=t=>({'AMRAP':'amrap','For Time':'fortime','EMOM':'emom','RFT':'rft','Other':'other'}[t]||'other');
-let draftMoves=[{reps:'',exercise:''}];
+
+// draftMoves は {reps, weight, exercise} の3フィールド構成
+let draftMoves=[{reps:'',weight:'',exercise:''}];
+let wodFormDate=TODAYKEY;
+let editingWODId=null;
 
 function movesFormHTML(){
-  return`<div class="moves-list" id="moves-list">${draftMoves.map((m,i)=>`
+  return`<div class="move-col-labels">
+    <div class="move-col-label">回数</div>
+    <div class="move-col-label">重量</div>
+    <div class="move-col-label">エクササイズ</div>
+    <div></div>
+  </div>
+  <div class="moves-list" id="moves-list">${draftMoves.map((m,i)=>`
     <div class="move-row" id="mrow-${i}">
-      <input class="reps" placeholder="回数・重量" value="${esc(m.reps)}" oninput="draftMoves[${i}].reps=this.value" onkeydown="moveRowKey(event,${i})">
-      <input class="exercise" placeholder="エクササイズ名" value="${esc(m.exercise)}" list="ex-hints" oninput="draftMoves[${i}].exercise=this.value" onkeydown="moveRowKey(event,${i})">
-      ${draftMoves.length>1?`<button class="del-btn" onclick="removeMoveRow(${i})">✕</button>`:'<div style="width:44px"></div>'}
+      <input placeholder="例:10" value="${esc(m.reps)}" oninput="draftMoves[${i}].reps=this.value" onkeydown="moveRowKey(event,${i})">
+      <input placeholder="例:60kg" value="${esc(m.weight||'')}" oninput="draftMoves[${i}].weight=this.value" onkeydown="moveRowKey(event,${i})">
+      <input placeholder="エクササイズ名" value="${esc(m.exercise)}" list="ex-hints" oninput="draftMoves[${i}].exercise=this.value" onkeydown="moveRowKey(event,${i})" style="text-align:left">
+      ${draftMoves.length>1
+        ?`<button class="del-btn" onclick="removeMoveRow(${i})" type="button" style="font-size:14px">✕</button>`
+        :'<div></div>'}
     </div>`).join('')}</div>
-  <button class="add-move-btn" onclick="addMoveRow()">＋ ムーブメントを追加</button>
+  <button class="add-move-btn" onclick="addMoveRow()" type="button">＋ ムーブメントを追加</button>
   <datalist id="ex-hints">
     <option value="スラスター"><option value="デッドリフト"><option value="バックスクワット">
     <option value="フロントスクワット"><option value="オーバーヘッドスクワット"><option value="スナッチ">
@@ -291,34 +345,56 @@ function movesFormHTML(){
     <option value="ローイング (Cal)"><option value="スキーエルグ (Cal)"><option value="バイク (Cal)">
   </datalist>`;
 }
-function addMoveRow(){syncDraftMoves();draftMoves.push({reps:'',exercise:''});reRenderMoves();setTimeout(()=>{const rows=document.querySelectorAll('.move-row');if(rows.length)rows[rows.length-1].querySelector('.reps')?.focus();},50);}
-function removeMoveRow(i){syncDraftMoves();draftMoves.splice(i,1);if(!draftMoves.length)draftMoves=[{reps:'',exercise:''}];reRenderMoves();}
-function moveRowKey(e,i){if(e.key==='Enter'){e.preventDefault();addMoveRow();}if(e.key==='Backspace'){const row=draftMoves[i];if(!row.reps&&!row.exercise&&draftMoves.length>1){e.preventDefault();removeMoveRow(i);}}}
-function syncDraftMoves(){document.querySelectorAll('.move-row').forEach((row,i)=>{if(!draftMoves[i])return;const repsEl=row.querySelector('.reps');const exEl=row.querySelector('.exercise');if(repsEl)draftMoves[i].reps=repsEl.value;if(exEl)draftMoves[i].exercise=exEl.value;});}
-function reRenderMoves(){const wrap=document.getElementById('moves-wrap');if(wrap)wrap.innerHTML=movesFormHTML();}
 
-function tmplWOD(){
-  const today=state.workouts.filter(w=>w.date===TODAYKEY).sort((a,b)=>b.id-a.id);
-  return`<div class="section-title">今日のワークアウト</div>
-  <div class="card">
-    <div class="grid2">
-      <div class="field"><label class="lbl">ワークアウト名</label><input id="wod-name" placeholder="例: Fran, Helen..."></div>
-      <div class="field"><label class="lbl">タイプ</label><select id="wod-type">${WOD_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
-    </div>
-    <div class="grid3">
-      <div class="field"><label class="lbl">スコア / タイム</label><input id="wod-score" placeholder="例: 12:34"></div>
-      <div class="field"><label class="lbl">制限時間</label><input id="wod-timelimit" placeholder="例: 20分"></div>
-      <div class="field"><label class="lbl">Rx / Scaled</label><select id="wod-rx"><option>Rx</option><option>Scaled</option><option>Rx+</option></select></div>
-    </div>
-    <div class="field"><label class="lbl">ムーブメント</label><div id="moves-wrap">${movesFormHTML()}</div></div>
-    <div class="field"><label class="lbl">メモ・感想</label><input id="wod-notes" placeholder="調子、改善点など..."></div>
-    <div class="flex-end">
-      <button class="btn btn-ghost" onclick="clearWODForm()">クリア</button>
-      <button class="btn btn-primary" onclick="addWOD()">WODを記録する</button>
-    </div>
-  </div>
-  ${today.length>0?`<div class="section-title" style="margin-top:20px">本日の記録 (${today.length}件)</div>`:''}
-  ${today.map(w=>`
+function addMoveRow(){
+  syncDraftMoves();
+  draftMoves.push({reps:'',weight:'',exercise:''});
+  reRenderMoves();
+  setTimeout(()=>{
+    const rows=document.querySelectorAll('.move-row');
+    if(rows.length)rows[rows.length-1].querySelectorAll('input')[0]?.focus();
+  },50);
+}
+function removeMoveRow(i){
+  syncDraftMoves();
+  draftMoves.splice(i,1);
+  if(!draftMoves.length)draftMoves=[{reps:'',weight:'',exercise:''}];
+  reRenderMoves();
+}
+function moveRowKey(e,i){
+  if(e.key==='Enter'){e.preventDefault();addMoveRow();}
+  if(e.key==='Backspace'){
+    const row=draftMoves[i];
+    if(!row.reps&&!row.weight&&!row.exercise&&draftMoves.length>1){e.preventDefault();removeMoveRow(i);}
+  }
+}
+function syncDraftMoves(){
+  document.querySelectorAll('.move-row').forEach((row,i)=>{
+    if(!draftMoves[i])return;
+    const inputs=row.querySelectorAll('input');
+    if(inputs[0])draftMoves[i].reps=inputs[0].value;
+    if(inputs[1])draftMoves[i].weight=inputs[1].value;
+    if(inputs[2])draftMoves[i].exercise=inputs[2].value;
+  });
+}
+function reRenderMoves(){
+  const wrap=document.getElementById('moves-wrap');
+  if(wrap)wrap.innerHTML=movesFormHTML();
+}
+
+function onWodDateChange(val){
+  wodFormDate=val||TODAYKEY;
+  const listEl=document.getElementById('wod-day-list');
+  if(listEl)listEl.innerHTML=renderWODDayListHTML();
+}
+
+function renderWODDayListHTML(){
+  const filtered=state.workouts
+    .filter(w=>toISO(w.date)===wodFormDate && w.id!==editingWODId)
+    .sort((a,b)=>b.id-a.id);
+  if(!filtered.length)return`<div class="empty" style="padding:28px 0 10px">この日の記録はまだありません<br>上のフォームからWODを追加しましょう 💪</div>`;
+  return`<div class="section-title" style="margin-top:20px">この日の記録 (${filtered.length}件)</div>
+  ${filtered.map(w=>`
   <div class="card">
     <div class="wod-row">
       <div class="wod-body">
@@ -334,8 +410,48 @@ function tmplWOD(){
       </div>
       <button class="del-btn" onclick="deleteWOD(${w.id})">✕</button>
     </div>
-  </div>`).join('')}
-  ${today.length===0?`<div class="empty">まだ本日の記録がありません<br>上のフォームからWODを追加しましょう 💪</div>`:''}`;
+  </div>`).join('')}`;
+}
+
+function tmplWOD(){
+  const ed=editingWODId?state.workouts.find(w=>w.id===editingWODId):null;
+  const fDate=ed?toISO(ed.date):wodFormDate;
+  const fName=ed?ed.name:'';
+  const fType=ed?ed.type:'AMRAP';
+  const fScore=ed?ed.score:'';
+  const fTl=ed?ed.timelimit:'';
+  const fRx=ed?ed.rx:'Rx';
+  const fNotes=ed?ed.notes:'';
+  return`
+  ${ed?`<div class="edit-banner">✏️ ワークアウトを編集中</div>`:''}
+  <div class="section-title">${ed?'ワークアウトを編集':'ワークアウトを記録'}</div>
+  <div class="card${ed?' card-editing':''}">
+    <div class="field"><label class="lbl">日付</label><input type="date" id="wod-date" value="${fDate}" onchange="onWodDateChange(this.value)"></div>
+    <div class="grid2">
+      <div class="field"><label class="lbl">ワークアウト名</label><input id="wod-name" placeholder="例: Fran, Helen..." value="${esc(fName)}"></div>
+      <div class="field"><label class="lbl">タイプ</label><select id="wod-type">${WOD_TYPES.map(t=>`<option${t===fType?' selected':''}>${t}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label class="lbl">スコア / タイム</label><input id="wod-score" placeholder="例: 12:34" value="${esc(fScore)}"></div>
+      <div class="field"><label class="lbl">制限時間</label><input id="wod-timelimit" placeholder="例: 20分" value="${esc(fTl)}"></div>
+      <div class="field"><label class="lbl">Rx / Scaled</label><select id="wod-rx">
+        <option${fRx==='Rx'?' selected':''}>Rx</option>
+        <option${fRx==='Scaled'?' selected':''}>Scaled</option>
+        <option${fRx==='Rx+'?' selected':''}>Rx+</option>
+      </select></div>
+    </div>
+    <div class="field"><label class="lbl">ムーブメント</label><div id="moves-wrap">${movesFormHTML()}</div></div>
+    <div class="field"><label class="lbl">メモ・感想</label><input id="wod-notes" placeholder="調子、改善点など..." value="${esc(fNotes)}"></div>
+    <div class="flex-end">
+      ${ed
+        ?`<button class="btn btn-ghost" onclick="cancelEditWOD()">キャンセル</button>
+           <button class="btn btn-primary" onclick="updateWOD()">更新する</button>`
+        :`<button class="btn btn-ghost" onclick="clearWODForm()">クリア</button>
+           <button class="btn btn-primary" onclick="addWOD()">WODを記録する</button>`
+      }
+    </div>
+  </div>
+  <div id="wod-day-list">${renderWODDayListHTML()}</div>`;
 }
 
 function renderMovesList(moves){
@@ -343,95 +459,229 @@ function renderMovesList(moves){
   if(typeof moves==='string')return`<div class="wod-moves">${esc(moves)}</div>`;
   const lines=moves.filter(m=>m.exercise);
   if(!lines.length)return'';
-  return`<div class="move-display">${lines.map(m=>`<div class="move-line"><span class="move-reps">${esc(m.reps||'')}</span><span class="move-ex">${esc(m.exercise)}</span></div>`).join('')}</div>`;
+  return`<div class="move-display">${lines.map(m=>{
+    let p=[];
+    if(m.reps)p.push(`<span class="move-reps">${esc(m.reps)}</span>`);
+    if(m.weight)p.push(`<span class="move-sep">×</span><span class="move-weight">${esc(m.weight)}</span>`);
+    p.push(`<span class="move-ex">${esc(m.exercise)}</span>`);
+    return`<div class="move-line">${p.join('')}</div>`;
+  }).join('')}</div>`;
 }
-function clearWODForm(){['wod-name','wod-score','wod-timelimit','wod-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});draftMoves=[{reps:'',exercise:''}];reRenderMoves();}
+
+function clearWODForm(){
+  ['wod-name','wod-score','wod-timelimit','wod-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  draftMoves=[{reps:'',weight:'',exercise:''}];
+  reRenderMoves();
+}
+
 function addWOD(){
   syncDraftMoves();
-  const name=v('wod-name'),type=v('wod-type'),score=v('wod-score'),timelimit=v('wod-timelimit'),notes=v('wod-notes'),rx=v('wod-rx');
-  const moves=draftMoves.filter(m=>m.exercise.trim());
+  const name=v('wod-name'),type=v('wod-type'),score=v('wod-score'),
+        timelimit=v('wod-timelimit'),notes=v('wod-notes'),rx=v('wod-rx'),
+        date=v('wod-date')||TODAYKEY;
+  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim());
   if(!name&&!moves.length){alert('ワークアウト名またはムーブメントを入力してください');return;}
-  state.workouts.push({id:Date.now(),date:TODAYKEY,name,type,score,timelimit,moves,notes,rx});
-  draftMoves=[{reps:'',exercise:''}];
+  state.workouts.push({id:Date.now(),date,name,type,score,timelimit,moves,notes,rx});
+  draftMoves=[{reps:'',weight:'',exercise:''}];
+  wodFormDate=date;
   saveWorkouts();renderStats();switchTab('wod');
 }
-function deleteWOD(id){if(!confirm('このWODを削除しますか？'))return;state.workouts=state.workouts.filter(w=>w.id!==id);saveWorkouts();renderStats();switchTab('wod');}
+
+function updateWOD(){
+  syncDraftMoves();
+  const idx=state.workouts.findIndex(w=>w.id===editingWODId);
+  if(idx<0){editingWODId=null;return;}
+  const name=v('wod-name'),type=v('wod-type'),score=v('wod-score'),
+        timelimit=v('wod-timelimit'),notes=v('wod-notes'),rx=v('wod-rx'),
+        date=v('wod-date')||TODAYKEY;
+  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim());
+  state.workouts[idx]={...state.workouts[idx],date,name,type,score,timelimit,moves,notes,rx};
+  editingWODId=null;
+  draftMoves=[{reps:'',weight:'',exercise:''}];
+  saveWorkouts();renderStats();switchTab('history');
+}
+
+function cancelEditWOD(){
+  editingWODId=null;
+  draftMoves=[{reps:'',weight:'',exercise:''}];
+  switchTab('history');
+}
+
+function editWOD(id){
+  const wod=state.workouts.find(w=>w.id===id);
+  if(!wod)return;
+  editingWODId=id;
+  wodFormDate=toISO(wod.date);
+  // 旧フォーマット ({reps,exercise}) も新フォーマット ({reps,weight,exercise}) も対応
+  draftMoves=(wod.moves&&Array.isArray(wod.moves)&&wod.moves.length)
+    ?wod.moves.map(m=>({reps:m.reps||'',weight:m.weight||'',exercise:m.exercise||''}))
+    :[{reps:'',weight:'',exercise:''}];
+  switchTab('wod');
+}
+
+function deleteWOD(id){
+  if(!confirm('このWODを削除しますか？'))return;
+  state.workouts=state.workouts.filter(w=>w.id!==id);
+  saveWorkouts();renderStats();switchTab(currentTab);
+}
 
 // ─── PR Tab ───────────────────────────────────────────────────
-const PR_HINTS=['スラスター','デッドリフト','バックスクワット','フロントスクワット','オーバーヘッドスクワット','スナッチ','パワースナッチ','クリーン','パワークリーン','クリーン&ジャーク','ジャーク','プルアップ (最大回数)','マッスルアップ','ハンドスタンドプッシュアップ','ダブルアンダー (1分)'];
+const PR_HINTS=['スラスター','デッドリフト','バックスクワット','フロントスクワット','オーバーヘッドスクワット',
+  'スナッチ','パワースナッチ','クリーン','パワークリーン','クリーン&ジャーク','ジャーク',
+  'プルアップ (最大回数)','マッスルアップ','ハンドスタンドプッシュアップ','ダブルアンダー (1分)'];
+let editingPRId=null;
+
 function tmplPR(){
-  return`<div class="section-title">パーソナルレコード</div>
-  <div class="card">
+  const ed=editingPRId?state.prs.find(p=>p.id===editingPRId):null;
+  const fName=ed?ed.name:'';
+  const fVal=ed?ed.val:'';
+  // 達成日：既存データが旧フォーマットの場合も YYYY-MM-DD に変換してinputにセット
+  const fDate=ed?toISO(ed.date):TODAYKEY;
+  return`
+  ${ed?`<div class="edit-banner">✏️ PRを編集中：${esc(ed.name)}</div>`:''}
+  <div class="section-title">パーソナルレコード</div>
+  <div class="card${ed?' card-editing':''}">
     <div class="grid2">
-      <div class="field"><label class="lbl">エクササイズ</label><input id="pr-name" placeholder="例: デッドリフト" list="pr-hints"><datalist id="pr-hints">${PR_HINTS.map(h=>`<option value="${h}">`).join('')}</datalist></div>
-      <div class="field"><label class="lbl">記録</label><input id="pr-val" placeholder="例: 120kg, 25回"></div>
-    </div>
-    <div class="flex-end"><button class="btn btn-primary" onclick="addPR()">PRを登録</button></div>
-  </div>
-  ${state.prs.length>0?`<div class="card">${state.prs.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).map(p=>`
-    <div class="pr-item">
-      <div><div class="pr-name">${esc(p.name)}</div><div class="pr-date">${p.date}</div></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="pr-val">${esc(p.val)}</div>
-        <button class="del-btn" onclick="deletePR(${p.id})">✕</button>
+      <div class="field">
+        <label class="lbl">エクササイズ</label>
+        <input id="pr-name" placeholder="例: デッドリフト" list="pr-hints" value="${esc(fName)}">
+        <datalist id="pr-hints">${PR_HINTS.map(h=>`<option value="${h}">`).join('')}</datalist>
       </div>
-    </div>`).join('')}</div>`:`<div class="empty">PRを登録して自分の記録を管理しましょう 🏆</div>`}`;
+      <div class="field"><label class="lbl">記録</label><input id="pr-val" placeholder="例: 120kg, 25回" value="${esc(fVal)}"></div>
+    </div>
+    <div class="field"><label class="lbl">達成日</label><input type="date" id="pr-date" value="${fDate}"></div>
+    <div class="flex-end">
+      ${ed?`<button class="btn btn-ghost" onclick="cancelEditPR()">キャンセル</button>`:''}
+      <button class="btn btn-primary" onclick="savePR()">${ed?'PRを更新':'PRを登録'}</button>
+    </div>
+  </div>
+  ${state.prs.length>0
+    ?`<div class="card">${state.prs.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).map(p=>`
+      <div class="pr-item">
+        <div style="flex:1;min-width:0">
+          <div class="pr-name">${esc(p.name)}</div>
+          ${p.date?`<div class="pr-date">📅 ${fmtDate(p.date)}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:2px">
+          <div class="pr-val">${esc(p.val)}</div>
+          <button class="edit-btn" onclick="editPR(${p.id})">✏️</button>
+          <button class="del-btn" onclick="deletePR(${p.id})">✕</button>
+        </div>
+      </div>`).join('')}</div>`
+    :`<div class="empty">PRを登録して自分の記録を管理しましょう 🏆</div>`}`;
 }
-function addPR(){
-  const name=v('pr-name'),val=v('pr-val');
+
+function savePR(){
+  const name=v('pr-name'),val=v('pr-val'),date=v('pr-date')||TODAYKEY;
   if(!name||!val){alert('エクササイズ名と記録を入力してください');return;}
-  const idx=state.prs.findIndex(p=>p.name===name);
-  const dateStr=new Date().toLocaleDateString('ja-JP');
-  if(idx>=0){if(!confirm(`${name}のPRを更新しますか？\n現在: ${state.prs[idx].val} → 新: ${val}`))return;state.prs[idx]={...state.prs[idx],val,date:dateStr};}
-  else{state.prs.push({id:Date.now(),name,val,date:dateStr});}
+  if(editingPRId){
+    const idx=state.prs.findIndex(p=>p.id===editingPRId);
+    if(idx>=0)state.prs[idx]={...state.prs[idx],name,val,date};
+    editingPRId=null;
+  } else {
+    const idx=state.prs.findIndex(p=>p.name===name);
+    if(idx>=0){
+      if(!confirm(`${name}のPRを上書きしますか？\n現在: ${state.prs[idx].val} → 新: ${val}`))return;
+      state.prs[idx]={...state.prs[idx],name,val,date};
+    } else {
+      state.prs.push({id:Date.now(),name,val,date});
+    }
+  }
   savePRs();renderStats();switchTab('pr');
 }
-function deletePR(id){if(!confirm('このPRを削除しますか？'))return;state.prs=state.prs.filter(p=>p.id!==id);savePRs();renderStats();switchTab('pr');}
+
+function editPR(id){
+  editingPRId=id;
+  switchTab('pr');
+}
+
+function cancelEditPR(){
+  editingPRId=null;
+  switchTab('pr');
+}
+
+function deletePR(id){
+  if(!confirm('このPRを削除しますか？'))return;
+  if(editingPRId===id)editingPRId=null;
+  state.prs=state.prs.filter(p=>p.id!==id);
+  savePRs();renderStats();switchTab('pr');
+}
 
 // ─── History Tab ──────────────────────────────────────────────
 function tmplHistory(){
   if(!state.workouts.length)return`<div class="section-title">履歴</div><div class="empty">まだ記録がありません</div>`;
   const byDate={};
-  state.workouts.forEach(w=>{if(!byDate[w.date])byDate[w.date]=[];byDate[w.date].push(w);});
+  state.workouts.forEach(w=>{
+    const key=toISO(w.date);
+    if(!byDate[key])byDate[key]=[];
+    byDate[key].push(w);
+  });
   const sorted=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
   return`<div class="section-title">ワークアウト履歴 (${state.workouts.length}件)</div>
   <div style="margin-bottom:14px"><input id="hist-search" placeholder="検索..." oninput="filterHistory()"></div>
   <div id="hist-list">${sorted.map(date=>histDay(date,byDate[date])).join('')}</div>`;
 }
+
 function histDay(date,wods){
   const label=new Date(date+'T12:00:00').toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   return`<div class="hist-date-group">
     <div class="hist-date">${label} (${wods.length}件)</div>
     ${wods.map(w=>`<div class="hist-card">
       <div class="hist-header">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0">
           <span style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:700;font-size:15px">${esc(w.name||'WOD')}</span>
           <span class="tag tag-${tagCls(w.type)}">${w.type}</span>
           ${w.timelimit?`<span class="tag" style="color:var(--info);border-color:var(--info);background:rgba(55,138,221,.1)">⏱ ${esc(w.timelimit)}</span>`:''}
           ${w.rx?`<span class="tag" style="color:var(--warn);border-color:var(--warn);background:rgba(245,166,35,.1)">${w.rx}</span>`:''}
         </div>
-        ${w.score?`<span style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:17px;color:var(--success)">${esc(w.score)}</span>`:''}
+        <div class="hist-actions">
+          <button class="edit-btn" onclick="editWOD(${w.id})" title="編集">✏️</button>
+          <button class="del-btn" onclick="deleteWOD(${w.id})">✕</button>
+        </div>
       </div>
+      ${w.score?`<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;font-weight:900;font-size:17px;color:var(--success);margin-top:4px">${esc(w.score)}</div>`:''}
       ${w.moves?`<div style="margin-top:8px">${renderMovesListCompact(w.moves)}</div>`:''}
       ${w.notes?`<div class="wod-notes" style="margin-top:4px;font-size:12px">${esc(w.notes)}</div>`:''}
     </div>`).join('')}
   </div>`;
 }
+
 function renderMovesListCompact(moves){
   if(!moves||moves.length===0)return'';
   if(typeof moves==='string')return`<div class="wod-moves" style="font-size:12px">${esc(moves.slice(0,120))}${moves.length>120?'…':''}</div>`;
   const lines=moves.filter(m=>m.exercise).slice(0,6);
   if(!lines.length)return'';
-  return`<div class="move-display">${lines.map(m=>`<div class="move-line"><span class="move-reps" style="font-size:12px">${esc(m.reps||'')}</span><span class="move-ex" style="font-size:12px">${esc(m.exercise)}</span></div>`).join('')}${moves.filter(m=>m.exercise).length>6?`<div class="move-line"><span class="move-ex" style="font-size:11px;color:var(--muted)">…他${moves.filter(m=>m.exercise).length-6}件</span></div>`:''}</div>`;
+  const total=moves.filter(m=>m.exercise).length;
+  return`<div class="move-display">${lines.map(m=>{
+    let p=[];
+    if(m.reps)p.push(`<span class="move-reps" style="font-size:12px">${esc(m.reps)}</span>`);
+    if(m.weight)p.push(`<span class="move-sep" style="font-size:11px">×</span><span class="move-weight" style="font-size:12px">${esc(m.weight)}</span>`);
+    p.push(`<span class="move-ex" style="font-size:12px">${esc(m.exercise)}</span>`);
+    return`<div class="move-line">${p.join('')}</div>`;
+  }).join('')}${total>6?`<div class="move-line"><span class="move-ex" style="font-size:11px;color:var(--muted)">…他${total-6}件</span></div>`:''}</div>`;
 }
-function movesSearchText(moves){if(!moves)return'';if(typeof moves==='string')return moves;return moves.map(m=>`${m.reps} ${m.exercise}`).join(' ');}
+
+function movesSearchText(moves){
+  if(!moves)return'';
+  if(typeof moves==='string')return moves;
+  return moves.map(m=>`${m.reps||''} ${m.weight||''} ${m.exercise||''}`).join(' ');
+}
+
 function filterHistory(){
   const q=(document.getElementById('hist-search')?.value||'').toLowerCase();
   if(!q){switchTab('history');return;}
   const byDate={};
-  state.workouts.filter(w=>(w.name+movesSearchText(w.moves)+w.notes+w.type).toLowerCase().includes(q)).forEach(w=>{if(!byDate[w.date])byDate[w.date]=[];byDate[w.date].push(w);});
+  state.workouts
+    .filter(w=>(w.name+movesSearchText(w.moves)+(w.notes||'')+(w.type||'')).toLowerCase().includes(q))
+    .forEach(w=>{
+      const key=toISO(w.date);
+      if(!byDate[key])byDate[key]=[];
+      byDate[key].push(w);
+    });
   const sorted=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-  document.getElementById('hist-list').innerHTML=sorted.length?sorted.map(d=>histDay(d,byDate[d])).join(''):`<div class="empty">「${q}」に一致するワークアウトはありません</div>`;
+  document.getElementById('hist-list').innerHTML=sorted.length
+    ?sorted.map(d=>histDay(d,byDate[d])).join('')
+    :`<div class="empty">「${q}」に一致するワークアウトはありません</div>`;
 }
 
 // ─── Utils ────────────────────────────────────────────────────
