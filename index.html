@@ -309,7 +309,7 @@ const WOD_TYPES=['AMRAP','For Time','EMOM','RFT','Other'];
 const tagCls=t=>({'AMRAP':'amrap','For Time':'fortime','EMOM':'emom','RFT':'rft','Other':'other'}[t]||'other');
 
 // draftMoves は {reps, weight, exercise} の3フィールド構成
-let draftMoves=[{reps:'',weight:'',exercise:''}];
+let draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
 let wodFormDate=TODAYKEY;
 let editingWODId=null;
 
@@ -317,17 +317,18 @@ function movesFormHTML(){
   return`<div class="move-col-labels">
     <div class="move-col-label">回数</div>
     <div class="move-col-label">重量</div>
-    <div class="move-col-label">エクササイズ</div>
+    <div class="move-col-label">距離</div>
     <div></div>
   </div>
   <div class="moves-list" id="moves-list">${draftMoves.map((m,i)=>`
     <div class="move-row" id="mrow-${i}">
       <input placeholder="例:10" value="${esc(m.reps)}" oninput="draftMoves[${i}].reps=this.value" onkeydown="moveRowKey(event,${i})">
       <input placeholder="例:60kg" value="${esc(m.weight||'')}" oninput="draftMoves[${i}].weight=this.value" onkeydown="moveRowKey(event,${i})">
-      <input placeholder="エクササイズ名" value="${esc(m.exercise)}" list="ex-hints" oninput="draftMoves[${i}].exercise=this.value" onkeydown="moveRowKey(event,${i})" style="text-align:left">
+      <input placeholder="例:400m" value="${esc(m.distance||'')}" oninput="draftMoves[${i}].distance=this.value" onkeydown="moveRowKey(event,${i})">
       ${draftMoves.length>1
         ?`<button class="del-btn" onclick="removeMoveRow(${i})" type="button" style="font-size:14px">✕</button>`
         :'<div></div>'}
+      <input class="ex-input" placeholder="エクササイズ名" value="${esc(m.exercise)}" list="ex-hints" oninput="draftMoves[${i}].exercise=this.value" onkeydown="moveRowKey(event,${i})">
     </div>`).join('')}</div>
   <button class="add-move-btn" onclick="addMoveRow()" type="button">＋ ムーブメントを追加</button>
   <datalist id="ex-hints">
@@ -347,7 +348,7 @@ function movesFormHTML(){
 
 function addMoveRow(){
   syncDraftMoves();
-  draftMoves.push({reps:'',weight:'',exercise:''});
+  draftMoves.push({reps:'',weight:'',distance:'',exercise:''});
   reRenderMoves();
   setTimeout(()=>{
     const rows=document.querySelectorAll('.move-row');
@@ -357,14 +358,14 @@ function addMoveRow(){
 function removeMoveRow(i){
   syncDraftMoves();
   draftMoves.splice(i,1);
-  if(!draftMoves.length)draftMoves=[{reps:'',weight:'',exercise:''}];
+  if(!draftMoves.length)draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
   reRenderMoves();
 }
 function moveRowKey(e,i){
   if(e.key==='Enter'){e.preventDefault();addMoveRow();}
   if(e.key==='Backspace'){
     const row=draftMoves[i];
-    if(!row.reps&&!row.weight&&!row.exercise&&draftMoves.length>1){e.preventDefault();removeMoveRow(i);}
+    if(!row.reps&&!row.weight&&!row.distance&&!row.exercise&&draftMoves.length>1){e.preventDefault();removeMoveRow(i);}
   }
 }
 function syncDraftMoves(){
@@ -373,7 +374,8 @@ function syncDraftMoves(){
     const inputs=row.querySelectorAll('input');
     if(inputs[0])draftMoves[i].reps=inputs[0].value;
     if(inputs[1])draftMoves[i].weight=inputs[1].value;
-    if(inputs[2])draftMoves[i].exercise=inputs[2].value;
+    if(inputs[2])draftMoves[i].distance=inputs[2].value;
+    if(inputs[3])draftMoves[i].exercise=inputs[3].value;
   });
 }
 function reRenderMoves(){
@@ -462,6 +464,7 @@ function renderMovesList(moves){
     let p=[];
     if(m.reps)p.push(`<span class="move-reps">${esc(m.reps)}</span>`);
     if(m.weight)p.push(`<span class="move-sep">×</span><span class="move-weight">${esc(m.weight)}</span>`);
+    if(m.distance)p.push(`<span class="move-sep">📍</span><span style="font-weight:600;color:var(--info);font-size:13px;flex-shrink:0">${esc(m.distance)}</span>`);
     p.push(`<span class="move-ex">${esc(m.exercise)}</span>`);
     return`<div class="move-line">${p.join('')}</div>`;
   }).join('')}</div>`;
@@ -469,7 +472,7 @@ function renderMovesList(moves){
 
 function clearWODForm(){
   ['wod-name','wod-score','wod-timelimit','wod-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  draftMoves=[{reps:'',weight:'',exercise:''}];
+  draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
   reRenderMoves();
 }
 
@@ -478,10 +481,10 @@ function addWOD(){
   const name=v('wod-name'),type=v('wod-type'),score=v('wod-score'),
         timelimit=v('wod-timelimit'),notes=v('wod-notes'),rx=v('wod-rx'),
         date=v('wod-date')||TODAYKEY;
-  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim());
+  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim()||m.distance.trim());
   if(!name&&!moves.length){alert('ワークアウト名またはムーブメントを入力してください');return;}
   state.workouts.push({id:Date.now(),date,name,type,score,timelimit,moves,notes,rx});
-  draftMoves=[{reps:'',weight:'',exercise:''}];
+  draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
   wodFormDate=date;
   saveWorkouts();renderStats();switchTab('wod');
 }
@@ -493,16 +496,16 @@ function updateWOD(){
   const name=v('wod-name'),type=v('wod-type'),score=v('wod-score'),
         timelimit=v('wod-timelimit'),notes=v('wod-notes'),rx=v('wod-rx'),
         date=v('wod-date')||TODAYKEY;
-  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim());
+  const moves=draftMoves.filter(m=>m.exercise.trim()||m.reps.trim()||m.weight.trim()||m.distance.trim());
   state.workouts[idx]={...state.workouts[idx],date,name,type,score,timelimit,moves,notes,rx};
   editingWODId=null;
-  draftMoves=[{reps:'',weight:'',exercise:''}];
+  draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
   saveWorkouts();renderStats();switchTab('history');
 }
 
 function cancelEditWOD(){
   editingWODId=null;
-  draftMoves=[{reps:'',weight:'',exercise:''}];
+  draftMoves=[{reps:'',weight:'',distance:'',exercise:''}];
   switchTab('history');
 }
 
@@ -511,10 +514,9 @@ function editWOD(id){
   if(!wod)return;
   editingWODId=id;
   wodFormDate=toISO(wod.date);
-  // 旧フォーマット ({reps,exercise}) も新フォーマット ({reps,weight,exercise}) も対応
   draftMoves=(wod.moves&&Array.isArray(wod.moves)&&wod.moves.length)
-    ?wod.moves.map(m=>({reps:m.reps||'',weight:m.weight||'',exercise:m.exercise||''}))
-    :[{reps:'',weight:'',exercise:''}];
+    ?wod.moves.map(m=>({reps:m.reps||'',weight:m.weight||'',distance:m.distance||'',exercise:m.exercise||''}))
+    :[{reps:'',weight:'',distance:'',exercise:''}];
   switchTab('wod');
 }
 
@@ -655,6 +657,7 @@ function renderMovesListCompact(moves){
     let p=[];
     if(m.reps)p.push(`<span class="move-reps" style="font-size:12px">${esc(m.reps)}</span>`);
     if(m.weight)p.push(`<span class="move-sep" style="font-size:11px">×</span><span class="move-weight" style="font-size:12px">${esc(m.weight)}</span>`);
+    if(m.distance)p.push(`<span class="move-sep" style="font-size:11px">📍</span><span style="font-weight:600;color:var(--info);font-size:12px;flex-shrink:0">${esc(m.distance)}</span>`);
     p.push(`<span class="move-ex" style="font-size:12px">${esc(m.exercise)}</span>`);
     return`<div class="move-line">${p.join('')}</div>`;
   }).join('')}${total>6?`<div class="move-line"><span class="move-ex" style="font-size:11px;color:var(--muted)">…他${total-6}件</span></div>`:''}</div>`;
